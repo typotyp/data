@@ -1,10 +1,9 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Foto & Video</title>
+    <title>Link Viewer</title>
     <style>
         * {
             margin: 0;
@@ -16,248 +15,437 @@
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
         
         .container {
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 800px;
-            overflow: hidden;
+            max-width: 1200px;
+            margin: 0 auto;
         }
         
-        .header {
-            background: #4a5568;
+        header {
+            text-align: center;
             color: white;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .input-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
             padding: 20px;
-            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        .header h1 {
-            font-size: 28px;
-            font-weight: 600;
-        }
-        
-        .upload-area {
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .upload-box {
-            border: 3px dashed #cbd5e0;
-            border-radius: 10px;
-            padding: 40px 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 20px;
-            background: #f7fafc;
-        }
-        
-        .upload-box:hover {
-            border-color: #667eea;
-            background: #ebf4ff;
-        }
-        
-        .upload-box i {
-            font-size: 50px;
-            color: #718096;
+        .input-group {
+            display: flex;
+            gap: 10px;
             margin-bottom: 15px;
         }
         
-        .upload-box p {
-            color: #4a5568;
-            font-size: 16px;
-        }
-        
-        .file-input {
-            display: none;
-        }
-        
-        .media-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .media-item {
-            position: relative;
+        #linkInput {
+            flex: 1;
+            padding: 15px;
+            border: none;
             border-radius: 10px;
-            overflow: hidden;
-            height: 200px;
-            background: #f7fafc;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+            outline: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
         }
         
-        .media-item img, .media-item video {
+        #linkInput::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            background: #ff6b6b;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        button:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .view-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .view-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .view-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+        
+        .view-header {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .view-title {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .view-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .view-actions button {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            box-shadow: none;
+        }
+        
+        .view-frame-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: #f0f0f0;
+        }
+        
+        .view-frame {
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            border: none;
         }
         
-        .media-item .delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(220, 38, 38, 0.9);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
+        .frame-error {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .media-item:hover .delete-btn {
-            opacity: 1;
-        }
-        
-        .no-media {
+            height: 100%;
+            color: white;
             text-align: center;
-            color: #718096;
-            font-size: 18px;
-            padding: 40px 0;
+            padding: 20px;
         }
         
-        @media (max-width: 600px) {
-            .container {
-                border-radius: 10px;
+        .frame-error h3 {
+            margin-bottom: 10px;
+            color: #ff6b6b;
+        }
+        
+        .frame-error p {
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .open-in-new {
+            background: #4ecdc4;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .open-in-new:hover {
+            background: #44c4b8;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 40px;
+            font-size: 1.2rem;
+        }
+        
+        .close-btn {
+            background: #ff4757;
+        }
+        
+        .close-btn:hover {
+            background: #ff3742;
+        }
+        
+        @media (min-width: 768px) {
+            .view-container {
+                grid-template-columns: repeat(2, 1fr);
             }
-            
-            .upload-area {
-                padding: 20px;
+        }
+        
+        @media (min-width: 1024px) {
+            .view-container {
+                grid-template-columns: repeat(3, 1fr);
             }
-            
-            .media-container {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-                gap: 10px;
-            }
-            
-            .media-item {
-                height: 150px;
-            }
+        }
+        
+        .url-list {
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        
+        .url-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 2px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            color: white;
+            font-size: 0.9rem;
+        }
+        
+        .url-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .url-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .url-actions button {
+            padding: 3px 6px;
+            font-size: 0.7rem;
+        }
+        
+        .info-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Upload Foto & Video</h1>
-        </div>
-        <div class="upload-area">
-            <div class="upload-box" id="uploadBox">
-                <i>📁</i>
-                <p>Tarik dan lepas file di sini, atau klik untuk memilih</p>
-                <input type="file" id="fileInput" class="file-input" accept="image/*,video/*" multiple>
+        <header>
+            <h1>Link Viewer</h1>
+            <p class="subtitle">Masukkan link dan langsung tampilkan dalam satu klik</p>
+            <p class="info-text">Catatan: Beberapa situs tidak dapat ditampilkan karena kebijakan keamanan (X-Frame-Options)</p>
+        </header>
+        
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="linkInput" placeholder="Masukkan URL (contoh: https://www.google.com)" value="">
+                <button id="addBtn">Tambahkan</button>
             </div>
-            <div class="media-container" id="mediaContainer">
-                <div class="no-media" id="noMedia">Belum ada file yang diunggah</div>
+            <div class="url-list" id="urlList"></div>
+        </div>
+        
+        <div class="view-container" id="viewContainer">
+            <div class="empty-state">
+                Belum ada link yang ditambahkan. Masukkan URL di atas untuk memulai.
             </div>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const uploadBox = document.getElementById('uploadBox');
-            const fileInput = document.getElementById('fileInput');
-            const mediaContainer = document.getElementById('mediaContainer');
-            const noMedia = document.getElementById('noMedia');
+            const linkInput = document.getElementById('linkInput');
+            const addBtn = document.getElementById('addBtn');
+            const viewContainer = document.getElementById('viewContainer');
+            const urlList = document.getElementById('urlList');
             
-            // Open file dialog when upload box is clicked
-            uploadBox.addEventListener('click', () => {
-                fileInput.click();
-            });
+            let views = [];
             
-            // Handle file selection
-            fileInput.addEventListener('change', handleFiles);
-            
-            // Handle drag and drop
-            uploadBox.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadBox.style.borderColor = '#667eea';
-                uploadBox.style.background = '#ebf4ff';
-            });
-            
-            uploadBox.addEventListener('dragleave', () => {
-                uploadBox.style.borderColor = '#cbd5e0';
-                uploadBox.style.background = '#f7fafc';
-            });
-            
-            uploadBox.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadBox.style.borderColor = '#cbd5e0';
-                uploadBox.style.background = '#f7fafc';
+            // Fungsi untuk menambahkan link baru
+            function addLink() {
+                let url = linkInput.value.trim();
                 
-                const files = e.dataTransfer.files;
-                if (files.length) {
-                    handleFileSelection(files);
+                // Validasi URL
+                if (!url) {
+                    alert('Silakan masukkan URL terlebih dahulu!');
+                    return;
                 }
-            });
-            
-            // Handle file input change
-            function handleFiles(e) {
-                const files = e.target.files;
-                if (files.length) {
-                    handleFileSelection(files);
+                
+                // Tambahkan protokol jika tidak ada
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                }
+                
+                try {
+                    // Validasi URL
+                    new URL(url);
+                    
+                    // Cek apakah URL sudah ada
+                    if (views.some(view => view.url === url)) {
+                        alert('URL ini sudah ditambahkan!');
+                        return;
+                    }
+                    
+                    // Tambahkan view baru
+                    const viewId = 'view-' + Date.now();
+                    views.push({ id: viewId, url: url });
+                    
+                    // Update tampilan
+                    updateViews();
+                    updateUrlList();
+                    
+                    // Kosongkan input
+                    linkInput.value = '';
+                    
+                } catch (e) {
+                    alert('URL tidak valid! Pastikan format URL benar.');
                 }
             }
             
-            // Process selected files
-            function handleFileSelection(files) {
-                noMedia.style.display = 'none';
+            // Fungsi untuk menghapus view
+            function removeView(id) {
+                views = views.filter(view => view.id !== id);
+                updateViews();
+                updateUrlList();
+            }
+            
+            // Fungsi untuk memperbarui tampilan views
+            function updateViews() {
+                if (views.length === 0) {
+                    viewContainer.innerHTML = '<div class="empty-state">Belum ada link yang ditambahkan. Masukkan URL di atas untuk memulai.</div>';
+                    return;
+                }
                 
-                Array.from(files).forEach(file => {
-                    const reader = new FileReader();
-                    const mediaItem = document.createElement('div');
-                    mediaItem.className = 'media-item';
+                viewContainer.innerHTML = '';
+                
+                views.forEach(view => {
+                    const domain = new URL(view.url).hostname;
                     
-                    reader.onload = function(e) {
-                        if (file.type.startsWith('image/')) {
-                            const img = document.createElement('img');
-                            img.src = e.target.result;
-                            img.alt = file.name;
-                            mediaItem.appendChild(img);
-                        } else if (file.type.startsWith('video/')) {
-                            const video = document.createElement('video');
-                            video.src = e.target.result;
-                            video.controls = true;
-                            video.preload = 'metadata';
-                            mediaItem.appendChild(video);
-                        }
-                        
-                        // Add delete button
-                        const deleteBtn = document.createElement('button');
-                        deleteBtn.className = 'delete-btn';
-                        deleteBtn.innerHTML = '×';
-                        deleteBtn.onclick = () => {
-                            mediaItem.remove();
-                            if (mediaContainer.children.length === 1) {
-                                noMedia.style.display = 'block';
-                            }
-                        };
-                        mediaItem.appendChild(deleteBtn);
-                        
-                        mediaContainer.appendChild(mediaItem);
+                    const viewCard = document.createElement('div');
+                    viewCard.className = 'view-card';
+                    
+                    // Buat container iframe dengan error handling
+                    const frameContainer = document.createElement('div');
+                    frameContainer.className = 'view-frame-container';
+                    
+                    const iframe = document.createElement('iframe');
+                    iframe.className = 'view-frame';
+                    iframe.src = view.url;
+                    iframe.allowFullscreen = true;
+                    
+                    // Tambahkan error handling
+                    iframe.onerror = function() {
+                        frameContainer.innerHTML = `
+                            <div class="frame-error">
+                                <h3>Gagal Memuat</h3>
+                                <p>Situs ini tidak dapat ditampilkan karena kebijakan keamanan (X-Frame-Options)</p>
+                                <button class="open-in-new" onclick="window.open('${view.url}', '_blank')">Buka di Tab Baru</button>
+                            </div>
+                        `;
                     };
                     
-                    reader.readAsDataURL(file);
+                    frameContainer.appendChild(iframe);
+                    
+                    viewCard.innerHTML = `
+                        <div class="view-header">
+                            <div class="view-title">${domain}</div>
+                            <div class="view-actions">
+                                <button class="open-in-new" onclick="window.open('${view.url}', '_blank')" style="background: #4ecdc4;">Buka</button>
+                                <button class="close-btn remove-btn" data-id="${view.id}">Tutup</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    viewCard.appendChild(frameContainer);
+                    viewContainer.appendChild(viewCard);
                 });
                 
-                // Clear file input
-                fileInput.value = '';
+                // Tambahkan event listener untuk tombol hapus
+                document.querySelectorAll('.remove-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        removeView(e.target.getAttribute('data-id'));
+                    });
+                });
             }
+            
+            // Fungsi untuk memperbarui daftar URL
+            function updateUrlList() {
+                urlList.innerHTML = '';
+                
+                views.forEach(view => {
+                    const domain = new URL(view.url).hostname;
+                    const urlItem = document.createElement('div');
+                    urlItem.className = 'url-item';
+                    urlItem.innerHTML = `
+                        <span>${domain}</span>
+                        <div class="url-actions">
+                            <button class="open-in-new" onclick="window.open('${view.url}', '_blank')" style="padding: 3px 6px; font-size: 0.7rem; background: #4ecdc4;">Buka</button>
+                            <button class="remove-btn" data-id="${view.id}" style="padding: 3px 6px; font-size: 0.7rem;">Hapus</button>
+                        </div>
+                    `;
+                    urlList.appendChild(urlItem);
+                });
+                
+                // Tambahkan event listener untuk tombol hapus di daftar
+                document.querySelectorAll('.url-list .remove-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        removeView(e.target.getAttribute('data-id'));
+                    });
+                });
+                
+                // Tambahkan event listener untuk tombol buka di daftar
+                document.querySelectorAll('.url-list .open-in-new').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                });
+            }
+            
+            // Event listener untuk tombol tambah
+            addBtn.addEventListener('click', addLink);
+            
+            // Event listener untuk Enter di input
+            linkInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    addLink();
+                }
+            });
+            
+            // Inisialisasi
+            updateViews();
+            updateUrlList();
         });
     </script>
 </body>
 </html>
-```
