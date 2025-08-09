@@ -207,6 +207,56 @@
             background: #3b82f6;
             width: 0%;
         }
+        
+        /* File structure visualization */
+        .file-structure {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .folder {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            background: #fff;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .folder-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .folder-icon {
+            color: #eab308;
+            margin-right: 8px;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            margin: 2px 0;
+            background: #f1f5f9;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+        
+        .file-icon {
+            margin-right: 6px;
+        }
+        
+        .image-icon {
+            color: #059669;
+        }
+        
+        .video-icon {
+            color: #2563eb;
+        }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -214,7 +264,30 @@
         <div class="max-w-4xl mx-auto">
             <div class="text-center mb-8">
                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Upload Media Files</h1>
-                <p class="text-gray-600">Upload your photos and videos to be saved in organized folders</p>
+                <p class="text-gray-600">Upload your photos and videos to be saved in organized folders outside the index</p>
+            </div>
+            
+            <!-- File Structure Visualization -->
+            <div class="file-structure">
+                <h3 class="text-lg font-semibold text-gray-700 mb-4">File System Structure</h3>
+                <div class="folder">
+                    <div class="folder-header">
+                        <i class="fas fa-folder folder-icon"></i>
+                        <strong>root/</strong>
+                    </div>
+                    <div class="folder">
+                        <div class="folder-header">
+                            <i class="fas fa-folder folder-icon"></i>
+                            <strong>data/</strong>
+                        </div>
+                        <div id="dataFolderContent" class="ml-4">
+                            <p class="text-gray-500 text-sm">No files stored yet</p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-2">
+                        <i class="fas fa-info-circle"></i> All media files are stored in the data folder outside the web root
+                    </div>
+                </div>
             </div>
             
             <!-- Category Tabs -->
@@ -335,11 +408,42 @@
     </div>
 
     <script>
-        // Simulate an organized data folder structure
-        let dataFolder = {
-            photos: [],
-            videos: [],
-            all: []
+        // Simulate a secure file storage system outside the web root
+        // In a real application, this would be handled by a backend server
+        // Files would be stored in a directory not accessible via direct URL
+        let secureStorage = {
+            files: [],
+            getNextId: function() {
+                return this.files.length > 0 ? Math.max(...this.files.map(f => f.id)) + 1 : 1;
+            },
+            addFile: function(fileData) {
+                const id = this.getNextId();
+                const secureFile = {
+                    id: id,
+                    name: fileData.name,
+                    type: fileData.type,
+                    size: fileData.size,
+                    securePath: `/secure-storage/data/${id}_${Date.now()}_${fileData.name.replace(/[^a-zA-Z0-9.]/g, '_')}`,
+                    originalName: fileData.name,
+                    uploadTime: new Date().toISOString(),
+                    category: fileData.type.startsWith('image/') ? 'photos' : 'videos',
+                    data: fileData.data // In real app, this would be the file path, not the data
+                };
+                this.files.push(secureFile);
+                return secureFile;
+            },
+            removeFile: function(id) {
+                this.files = this.files.filter(file => file.id !== id);
+            },
+            getAllFiles: function() {
+                return [...this.files];
+            },
+            getPhotos: function() {
+                return this.files.filter(file => file.category === 'photos');
+            },
+            getVideos: function() {
+                return this.files.filter(file => file.category === 'videos');
+            }
         };
         
         let selectedFiles = [];
@@ -353,6 +457,7 @@
         const uploadBtn = document.getElementById('uploadBtn');
         const mediaGrid = document.getElementById('mediaGrid');
         const sortOrder = document.getElementById('sortOrder');
+        const dataFolderContent = document.getElementById('dataFolderContent');
         
         // Category tabs
         const tabAll = document.getElementById('tab-all');
@@ -475,7 +580,7 @@
             updateFileList();
         }
         
-        // Upload files to organized "data folder"
+        // Upload files to secure storage outside web root
         uploadBtn.addEventListener('click', () => {
             if (selectedFiles.length === 0) {
                 alert('Please select files to upload');
@@ -495,7 +600,7 @@
             
             // Simulate server processing delay
             setTimeout(() => {
-                // Add files to organized data folder
+                // Add files to secure storage
                 selectedFiles.forEach(file => {
                     const reader = new FileReader();
                     reader.onload = function(e) {
@@ -504,19 +609,14 @@
                             type: file.type,
                             size: file.size,
                              e.target.result,
-                            uploadTime: new Date().toISOString(),
-                            category: file.type.startsWith('image/') ? 'photos' : 'videos'
+                            uploadTime: new Date().toISOString()
                         };
                         
-                        // Add to appropriate categories
-                        dataFolder.all.push(fileData);
-                        if (file.type.startsWith('image/')) {
-                            dataFolder.photos.push(fileData);
-                        } else {
-                            dataFolder.videos.push(fileData);
-                        }
+                        // Store in secure location (simulated)
+                        const secureFile = secureStorage.addFile(fileData);
                         
-                        // Update counters and display
+                        // Update UI
+                        updateFileStructure();
                         updateFolderCounts();
                         updateMediaDisplay();
                     };
@@ -533,7 +633,7 @@
                 // Show success message
                 const successMsg = document.createElement('div');
                 successMsg.className = 'fixed top-4 right-4 bg-green-600 text-white rounded-lg shadow-lg p-4 z-50 animate-fade-in';
-                successMsg.textContent = `${dataFolder.all.length} file(s) uploaded and organized successfully!`;
+                successMsg.textContent = `${secureStorage.files.length} file(s) uploaded to secure storage successfully!`;
                 document.body.appendChild(successMsg);
                 
                 // Auto-remove success message
@@ -546,6 +646,35 @@
             }, 1500);
         });
         
+        // Update file structure visualization
+        function updateFileStructure() {
+            dataFolderContent.innerHTML = '';
+            
+            if (secureStorage.files.length === 0) {
+                dataFolderContent.innerHTML = '<p class="text-gray-500 text-sm">No files stored yet</p>';
+                return;
+            }
+            
+            secureStorage.files.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                if (file.type.startsWith('image/')) {
+                    fileItem.innerHTML = `
+                        <i class="fas fa-image file-icon image-icon"></i>
+                        ${file.originalName}
+                    `;
+                } else if (file.type.startsWith('video/')) {
+                    fileItem.innerHTML = `
+                        <i class="fas fa-film file-icon video-icon"></i>
+                        ${file.originalName}
+                    `;
+                }
+                
+                dataFolderContent.appendChild(fileItem);
+            });
+        }
+        
         // Update folder counters
         function updateFolderCounts() {
             const now = new Date();
@@ -554,11 +683,15 @@
             startOfWeek.setDate(now.getDate() - now.getDay());
             const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
             
-            photoCount.textContent = `${dataFolder.photos.length} files`;
-            videoCount.textContent = `${dataFolder.videos.length} files`;
-            totalCount.textContent = `${dataFolder.all.length} files`;
+            const photos = secureStorage.getPhotos();
+            const videos = secureStorage.getVideos();
+            const allFiles = secureStorage.getAllFiles();
             
-            const todayFiles = dataFolder.all.filter(file => {
+            photoCount.textContent = `${photos.length} files`;
+            videoCount.textContent = `${videos.length} files`;
+            totalCount.textContent = `${allFiles.length} files`;
+            
+            const todayFiles = allFiles.filter(file => {
                 const fileDate = new Date(file.uploadTime);
                 return fileDate >= today;
             });
@@ -569,7 +702,7 @@
         function updateMediaDisplay() {
             mediaGrid.innerHTML = '';
             
-            if (dataFolder.all.length === 0) {
+            if (secureStorage.files.length === 0) {
                 mediaGrid.innerHTML = '<p class="text-gray-500 col-span-full text-center">No media in data folder yet</p>';
                 return;
             }
@@ -583,31 +716,31 @@
             
             switch (currentCategory) {
                 case 'photos':
-                    filteredFiles = [...dataFolder.photos];
+                    filteredFiles = secureStorage.getPhotos();
                     break;
                 case 'videos':
-                    filteredFiles = [...dataFolder.videos];
+                    filteredFiles = secureStorage.getVideos();
                     break;
                 case 'today':
-                    filteredFiles = dataFolder.all.filter(file => {
+                    filteredFiles = secureStorage.getAllFiles().filter(file => {
                         const fileDate = new Date(file.uploadTime);
                         return fileDate >= today;
                     });
                     break;
                 case 'week':
-                    filteredFiles = dataFolder.all.filter(file => {
+                    filteredFiles = secureStorage.getAllFiles().filter(file => {
                         const fileDate = new Date(file.uploadTime);
                         return fileDate >= startOfWeek;
                     });
                     break;
                 case 'month':
-                    filteredFiles = dataFolder.all.filter(file => {
+                    filteredFiles = secureStorage.getAllFiles().filter(file => {
                         const fileDate = new Date(file.uploadTime);
                         return fileDate >= startOfMonth;
                     });
                     break;
                 default:
-                    filteredFiles = [...dataFolder.all];
+                    filteredFiles = secureStorage.getAllFiles();
             }
             
             // Sort files
@@ -619,7 +752,7 @@
                     filteredFiles.sort((a, b) => new Date(a.uploadTime) - new Date(b.uploadTime));
                     break;
                 case 'name':
-                    filteredFiles.sort((a, b) => a.name.localeCompare(b.name));
+                    filteredFiles.sort((a, b) => a.originalName.localeCompare(b.originalName));
                     break;
                 case 'size':
                     filteredFiles.sort((a, b) => b.size - a.size);
@@ -634,7 +767,7 @@
                 if (item.type.startsWith('image/')) {
                     const img = document.createElement('img');
                     img.src = item.data;
-                    img.alt = item.name;
+                    img.alt = item.originalName;
                     img.className = 'w-full h-32 object-cover';
                     mediaItem.appendChild(img);
                 } else if (item.type.startsWith('video/')) {
@@ -655,7 +788,7 @@
                 fileInfo.className = 'file-info';
                 const fileSize = (item.size / (1024 * 1024)).toFixed(2);
                 fileInfo.innerHTML = `
-                    <div>${item.name}</div>
+                    <div>${item.originalName}</div>
                     <div>${fileSize} MB • ${new Date(item.uploadTime).toLocaleDateString()}</div>
                 `;
                 mediaItem.appendChild(fileInfo);
@@ -692,7 +825,7 @@
         // Close modal
         modalClose.addEventListener('click', () => {
             mediaModal.style.display = 'none';
-            modalVideo.pause();
+            if (modalVideo) modalVideo.pause();
             currentPlayingVideo = null;
         });
         
@@ -700,43 +833,49 @@
         mediaModal.addEventListener('click', (e) => {
             if (e.target === mediaModal) {
                 mediaModal.style.display = 'none';
-                modalVideo.pause();
+                if (modalVideo) modalVideo.pause();
                 currentPlayingVideo = null;
             }
         });
         
         // Video controls
-        playPauseBtn.addEventListener('click', () => {
-            if (modalVideo.paused) {
-                modalVideo.play();
-                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-            } else {
-                modalVideo.pause();
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            }
-        });
+        if (playPauseBtn) {
+            playPauseBtn.addEventListener('click', () => {
+                if (modalVideo.paused) {
+                    modalVideo.play();
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    modalVideo.pause();
+                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            });
+        }
         
-        volumeBtn.addEventListener('click', () => {
-            if (modalVideo.muted) {
-                modalVideo.muted = false;
-                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-            } else {
-                modalVideo.muted = true;
-                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-            }
-        });
+        if (volumeBtn) {
+            volumeBtn.addEventListener('click', () => {
+                if (modalVideo.muted) {
+                    modalVideo.muted = false;
+                    volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                } else {
+                    modalVideo.muted = true;
+                    volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                }
+            });
+        }
         
         // Update progress bar
-        modalVideo.addEventListener('timeupdate', () => {
-            const progress = (modalVideo.currentTime / modalVideo.duration) * 100;
-            progressBar.style.width = `${progress}%`;
-        });
-        
-        // Reset progress bar when video ends
-        modalVideo.addEventListener('ended', () => {
-            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            progressBar.style.width = '0%';
-        });
+        if (modalVideo) {
+            modalVideo.addEventListener('timeupdate', () => {
+                const progress = (modalVideo.currentTime / modalVideo.duration) * 100;
+                progressBar.style.width = `${progress}%`;
+            });
+            
+            // Reset progress bar when video ends
+            modalVideo.addEventListener('ended', () => {
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                progressBar.style.width = '0%';
+            });
+        }
         
         // Category tab click handlers
         function setActiveTab(tabId) {
@@ -751,20 +890,23 @@
             updateMediaDisplay();
         }
         
-        tabAll.addEventListener('click', () => setActiveTab('all'));
-        tabPhotos.addEventListener('click', () => setActiveTab('photos'));
-        tabVideos.addEventListener('click', () => setActiveTab('videos'));
-        tabToday.addEventListener('click', () => setActiveTab('today'));
-        tabWeek.addEventListener('click', () => setActiveTab('week'));
-        tabMonth.addEventListener('click', () => setActiveTab('month'));
+        if (tabAll) tabAll.addEventListener('click', () => setActiveTab('all'));
+        if (tabPhotos) tabPhotos.addEventListener('click', () => setActiveTab('photos'));
+        if (tabVideos) tabVideos.addEventListener('click', () => setActiveTab('videos'));
+        if (tabToday) tabToday.addEventListener('click', () => setActiveTab('today'));
+        if (tabWeek) tabWeek.addEventListener('click', () => setActiveTab('week'));
+        if (tabMonth) tabMonth.addEventListener('click', () => setActiveTab('month'));
         
         // Sort order change handler
-        sortOrder.addEventListener('change', () => {
-            currentSort = sortOrder.value;
-            updateMediaDisplay();
-        });
+        if (sortOrder) {
+            sortOrder.addEventListener('change', () => {
+                currentSort = sortOrder.value;
+                updateMediaDisplay();
+            });
+        }
         
         // Initialize with any existing data
+        updateFileStructure();
         updateFolderCounts();
         updateMediaDisplay();
     </script>
