@@ -4,922 +4,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Media</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <title>Upload Foto & Video</title>
     <style>
-        .file-preview {
-            position: relative;
-            width: 150px;
-            height: 150px;
-            margin: 10px;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background: #f3f4f6;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        .file-preview img, .file-preview video {
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #4a5568;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .upload-area {
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .upload-box {
+            border: 3px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 40px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            background: #f7fafc;
+        }
+        
+        .upload-box:hover {
+            border-color: #667eea;
+            background: #ebf4ff;
+        }
+        
+        .upload-box i {
+            font-size: 50px;
+            color: #718096;
+            margin-bottom: 15px;
+        }
+        
+        .upload-box p {
+            color: #4a5568;
+            font-size: 16px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .media-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .media-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 200px;
+            background: #f7fafc;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .media-item img, .media-item video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
         
-        .remove-btn {
+        .media-item .delete-btn {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(255, 0, 0, 0.7);
+            top: 10px;
+            right: 10px;
+            background: rgba(220, 38, 38, 0.9);
             color: white;
             border: none;
-            width: 25px;
-            height: 25px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
         
-        .upload-area {
-            border: 2px dashed #d1d5db;
-            border-radius: 8px;
-            padding: 40px;
+        .media-item:hover .delete-btn {
+            opacity: 1;
+        }
+        
+        .no-media {
             text-align: center;
-            transition: all 0.3s;
-            cursor: pointer;
+            color: #718096;
+            font-size: 18px;
+            padding: 40px 0;
         }
         
-        .upload-area:hover {
-            border-color: #6b7280;
-            background-color: #f9fafb;
-        }
-        
-        .upload-area.dragover {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-        }
-        
-        .category-tab {
-            padding: 8px 16px;
-            margin: 0 4px;
-            border-radius: 6px 6px 0 0;
-            cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        
-        .category-tab.active {
-            background-color: #3b82f6;
-            color: white;
-        }
-        
-        .category-tab:hover:not(.active) {
-            background-color: #e5e7eb;
-        }
-        
-        .media-item {
-            position: relative;
-            cursor: pointer;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .media-item:hover .play-overlay {
-            opacity: 1;
-        }
-        
-        .play-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .play-icon {
-            color: white;
-            font-size: 2rem;
-            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-        
-        .file-info {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
-            color: white;
-            padding: 8px;
-            font-size: 0.75rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .media-item:hover .file-info {
-            opacity: 1;
-        }
-        
-        /* Modal styles */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            max-width: 90%;
-            max-height: 90%;
-            position: relative;
-        }
-        
-        .modal-close {
-            position: absolute;
-            top: -40px;
-            right: 0;
-            color: white;
-            font-size: 2rem;
-            cursor: pointer;
-            background: none;
-            border: none;
-        }
-        
-        .modal-video {
-            max-width: 80%;
-            max-height: 80%;
-            width: auto;
-            height: auto;
-        }
-        
-        .modal-image {
-            max-width: 90%;
-            max-height: 90%;
-            width: auto;
-            height: auto;
-        }
-        
-        .video-controls {
-            position: absolute;
-            bottom: 10px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            color: white;
-            z-index: 10;
-        }
-        
-        .control-btn {
-            background: rgba(0, 0, 0, 0.5);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .progress-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            height: 3px;
-            background: #3b82f6;
-            width: 0%;
-        }
-        
-        /* File structure visualization */
-        .file-structure {
-            background: #f8fafc;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .folder {
-            margin-bottom: 8px;
-            padding: 8px;
-            border-radius: 4px;
-            background: #fff;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .folder-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-        
-        .folder-icon {
-            color: #eab308;
-            margin-right: 8px;
-        }
-        
-        .file-item {
-            display: flex;
-            align-items: center;
-            padding: 4px 8px;
-            margin: 2px 0;
-            background: #f1f5f9;
-            border-radius: 4px;
-            font-size: 0.875rem;
-        }
-        
-        .file-icon {
-            margin-right: 6px;
-        }
-        
-        .image-icon {
-            color: #059669;
-        }
-        
-        .video-icon {
-            color: #2563eb;
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 10px;
+            }
+            
+            .upload-area {
+                padding: 20px;
+            }
+            
+            .media-container {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 10px;
+            }
+            
+            .media-item {
+                height: 150px;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <div class="max-w-4xl mx-auto">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">Upload Media Files</h1>
-                <p class="text-gray-600">Upload your photos and videos to be saved in organized folders outside the index</p>
-            </div>
-            
-            <!-- File Structure Visualization -->
-            <div class="file-structure">
-                <h3 class="text-lg font-semibold text-gray-700 mb-4">File System Structure</h3>
-                <div class="folder">
-                    <div class="folder-header">
-                        <i class="fas fa-folder folder-icon"></i>
-                        <strong>root/</strong>
-                    </div>
-                    <div class="folder">
-                        <div class="folder-header">
-                            <i class="fas fa-folder folder-icon"></i>
-                            <strong>data/</strong>
-                        </div>
-                        <div id="dataFolderContent" class="ml-4">
-                            <p class="text-gray-500 text-sm">No files stored yet</p>
-                        </div>
-                    </div>
-                    <div class="text-xs text-gray-500 mt-2">
-                        <i class="fas fa-info-circle"></i> All media files are stored in the data folder outside the web root
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Category Tabs -->
-            <div class="bg-white rounded-t-lg shadow-lg p-4 mb-0">
-                <div class="flex flex-wrap gap-2">
-                    <div id="tab-all" class="category-tab active" data-category="all">All Files</div>
-                    <div id="tab-photos" class="category-tab" data-category="photos">Photos</div>
-                    <div id="tab-videos" class="category-tab" data-category="videos">Videos</div>
-                    <div id="tab-today" class="category-tab" data-category="today">Today</div>
-                    <div id="tab-week" class="category-tab" data-category="week">This Week</div>
-                    <div id="tab-month" class="category-tab" data-category="month">This Month</div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-                <div id="uploadArea" class="upload-area">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p class="text-gray-600 mb-2">Drag and drop files here, or click to select files</p>
-                    <p class="text-sm text-gray-500">Supports JPG, PNG, GIF, MP4, MOV, AVI files up to 100MB</p>
-                    <input type="file" id="fileInput" multiple accept="image/*,video/*" class="hidden" />
-                </div>
-                
-                <div class="mt-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-gray-700">Selected Files</h3>
-                        <button id="uploadBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-                            Upload Files
-                        </button>
-                    </div>
-                    
-                    <div id="fileList" class="flex flex-wrap gap-4 min-h-20 p-2 border border-dashed border-gray-300 rounded-lg">
-                        <p class="text-gray-500 italic m-auto">No files selected</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-700">Your Media Library</h3>
-                    <div class="flex gap-2">
-                        <select id="sortOrder" class="border border-gray-300 rounded-lg px-3 py-1 text-sm">
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="name">Name A-Z</option>
-                            <option value="size">Size</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div id="folderStructure" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div class="folder-item text-center cursor-pointer">
-                        <div class="bg-yellow-100 w-16 h-16 mx-auto rounded-lg flex items-center justify-center mb-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                            </svg>
-                        </div>
-                        <span class="text-sm font-medium">Photos</span>
-                        <span id="photoCount" class="text-xs text-gray-500">0 files</span>
-                    </div>
-                    
-                    <div class="folder-item text-center cursor-pointer">
-                        <div class="bg-blue-100 w-16 h-16 mx-auto rounded-lg flex items-center justify-center mb-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <span class="text-sm font-medium">Videos</span>
-                        <span id="videoCount" class="text-xs text-gray-500">0 files</span>
-                    </div>
-                    
-                    <div class="folder-item text-center cursor-pointer">
-                        <div class="bg-green-100 w-16 h-16 mx-auto rounded-lg flex items-center justify-center mb-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <span class="text-sm font-medium">Today</span>
-                        <span id="todayCount" class="text-xs text-gray-500">0 files</span>
-                    </div>
-                    
-                    <div class="folder-item text-center cursor-pointer">
-                        <div class="bg-purple-100 w-16 h-16 mx-auto rounded-lg flex items-center justify-center mb-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                            </svg>
-                        </div>
-                        <span class="text-sm font-medium">All Files</span>
-                        <span id="totalCount" class="text-xs text-gray-500">0 files</span>
-                    </div>
-                </div>
-                
-                <div id="mediaGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                    <!-- Media items will be displayed here -->
-                    <p class="text-gray-500 col-span-full text-center">No media in data folder yet</p>
-                </div>
-            </div>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Upload Foto & Video</h1>
         </div>
-    </div>
-
-    <!-- Media Modal -->
-    <div id="mediaModal" class="modal">
-        <button id="modalClose" class="modal-close">&times;</button>
-        <div class="modal-content">
-            <img id="modalImage" class="modal-image" style="display: none;">
-            <video id="modalVideo" class="modal-video" controls style="display: none;"></video>
-            <div id="videoControls" class="video-controls" style="display: none;">
-                <button id="playPauseBtn" class="control-btn">
-                    <i class="fas fa-pause"></i>
-                </button>
-                <button id="volumeBtn" class="control-btn">
-                    <i class="fas fa-volume-up"></i>
-                </button>
+        <div class="upload-area">
+            <div class="upload-box" id="uploadBox">
+                <i>📁</i>
+                <p>Tarik dan lepas file di sini, atau klik untuk memilih</p>
+                <input type="file" id="fileInput" class="file-input" accept="image/*,video/*" multiple>
             </div>
-            <div id="progressBar" class="progress-bar"></div>
+            <div class="media-container" id="mediaContainer">
+                <div class="no-media" id="noMedia">Belum ada file yang diunggah</div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Simulate a secure file storage system outside the web root
-        // In a real application, this would be handled by a backend server
-        // Files would be stored in a directory not accessible via direct URL
-        let secureStorage = {
-            files: [],
-            getNextId: function() {
-                return this.files.length > 0 ? Math.max(...this.files.map(f => f.id)) + 1 : 1;
-            },
-            addFile: function(fileData) {
-                const id = this.getNextId();
-                const secureFile = {
-                    id: id,
-                    name: fileData.name,
-                    type: fileData.type,
-                    size: fileData.size,
-                    securePath: `/secure-storage/data/${id}_${Date.now()}_${fileData.name.replace(/[^a-zA-Z0-9.]/g, '_')}`,
-                    originalName: fileData.name,
-                    uploadTime: new Date().toISOString(),
-                    category: fileData.type.startsWith('image/') ? 'photos' : 'videos',
-                    data: fileData.data // In real app, this would be the file path, not the data
-                };
-                this.files.push(secureFile);
-                return secureFile;
-            },
-            removeFile: function(id) {
-                this.files = this.files.filter(file => file.id !== id);
-            },
-            getAllFiles: function() {
-                return [...this.files];
-            },
-            getPhotos: function() {
-                return this.files.filter(file => file.category === 'photos');
-            },
-            getVideos: function() {
-                return this.files.filter(file => file.category === 'videos');
-            }
-        };
-        
-        let selectedFiles = [];
-        let currentCategory = 'all';
-        let currentSort = 'newest';
-        let currentPlayingVideo = null;
-        
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        const fileList = document.getElementById('fileList');
-        const uploadBtn = document.getElementById('uploadBtn');
-        const mediaGrid = document.getElementById('mediaGrid');
-        const sortOrder = document.getElementById('sortOrder');
-        const dataFolderContent = document.getElementById('dataFolderContent');
-        
-        // Category tabs
-        const tabAll = document.getElementById('tab-all');
-        const tabPhotos = document.getElementById('tab-photos');
-        const tabVideos = document.getElementById('tab-videos');
-        const tabToday = document.getElementById('tab-today');
-        const tabWeek = document.getElementById('tab-week');
-        const tabMonth = document.getElementById('tab-month');
-        
-        // Folder counters
-        const photoCount = document.getElementById('photoCount');
-        const videoCount = document.getElementById('videoCount');
-        const todayCount = document.getElementById('todayCount');
-        const totalCount = document.getElementById('totalCount');
-        
-        // Modal elements
-        const mediaModal = document.getElementById('mediaModal');
-        const modalImage = document.getElementById('modalImage');
-        const modalVideo = document.getElementById('modalVideo');
-        const modalClose = document.getElementById('modalClose');
-        const videoControls = document.getElementById('videoControls');
-        const playPauseBtn = document.getElementById('playPauseBtn');
-        const volumeBtn = document.getElementById('volumeBtn');
-        const progressBar = document.getElementById('progressBar');
-        
-        // Open file dialog when upload area is clicked
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-        
-        // Handle file selection
-        fileInput.addEventListener('change', handleFileSelect);
-        
-        // Handle drag and drop
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragover');
-        });
-        
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
-        });
-        
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragover');
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadBox = document.getElementById('uploadBox');
+            const fileInput = document.getElementById('fileInput');
+            const mediaContainer = document.getElementById('mediaContainer');
+            const noMedia = document.getElementById('noMedia');
             
-            const files = Array.from(e.dataTransfer.files);
-            processFiles(files);
-        });
-        
-        // Process selected files
-        function handleFileSelect(e) {
-            const files = Array.from(e.target.files);
-            processFiles(files);
-        }
-        
-        function processFiles(files) {
-            files.forEach(file => {
-                if (file.size > 100 * 1024 * 1024) {
-                    alert(`${file.name} exceeds the 100MB limit and was not added.`);
-                    return;
-                }
-                
-                if (!['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'video/mp4', 'video/mov', 'video/avi'].includes(file.type)) {
-                    alert(`${file.name} is not a supported file type.`);
-                    return;
-                }
-                
-                selectedFiles.push(file);
+            // Open file dialog when upload box is clicked
+            uploadBox.addEventListener('click', () => {
+                fileInput.click();
             });
             
-            updateFileList();
-        }
-        
-        // Update the file list display
-        function updateFileList() {
-            fileList.innerHTML = '';
+            // Handle file selection
+            fileInput.addEventListener('change', handleFiles);
             
-            if (selectedFiles.length === 0) {
-                fileList.innerHTML = '<p class="text-gray-500 italic m-auto">No files selected</p>';
-                return;
-            }
-            
-            selectedFiles.forEach((file, index) => {
-                const preview = document.createElement('div');
-                preview.className = 'file-preview';
-                
-                if (file.type.startsWith('image/')) {
-                    const img = document.createElement('img');
-                    img.src = URL.createObjectURL(file);
-                    img.alt = file.name;
-                    preview.appendChild(img);
-                } else if (file.type.startsWith('video/')) {
-                    const video = document.createElement('video');
-                    video.src = URL.createObjectURL(file);
-                    video.preload = 'metadata';
-                    video.className = 'w-full h-full object-cover';
-                    preview.appendChild(video);
-                }
-                
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'remove-btn';
-                removeBtn.innerHTML = '×';
-                removeBtn.onclick = () => removeFile(index);
-                preview.appendChild(removeBtn);
-                
-                const fileName = document.createElement('div');
-                fileName.className = 'text-xs text-center p-1 bg-white bg-opacity-90 absolute bottom-0 left-0 right-0 truncate';
-                fileName.textContent = file.name;
-                preview.appendChild(fileName);
-                
-                fileList.appendChild(preview);
+            // Handle drag and drop
+            uploadBox.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadBox.style.borderColor = '#667eea';
+                uploadBox.style.background = '#ebf4ff';
             });
-        }
-        
-        // Remove a file from the selection
-        function removeFile(index) {
-            selectedFiles.splice(index, 1);
-            updateFileList();
-        }
-        
-        // Upload files to secure storage outside web root
-        uploadBtn.addEventListener('click', () => {
-            if (selectedFiles.length === 0) {
-                alert('Please select files to upload');
-                return;
+            
+            uploadBox.addEventListener('dragleave', () => {
+                uploadBox.style.borderColor = '#cbd5e0';
+                uploadBox.style.background = '#f7fafc';
+            });
+            
+            uploadBox.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadBox.style.borderColor = '#cbd5e0';
+                uploadBox.style.background = '#f7fafc';
+                
+                const files = e.dataTransfer.files;
+                if (files.length) {
+                    handleFileSelection(files);
+                }
+            });
+            
+            // Handle file input change
+            function handleFiles(e) {
+                const files = e.target.files;
+                if (files.length) {
+                    handleFileSelection(files);
+                }
             }
             
-            // Simulate upload process
-            const uploadProgress = document.createElement('div');
-            uploadProgress.className = 'fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 z-50';
-            uploadProgress.innerHTML = `
-                <div class="flex items-center">
-                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
-                    <span>Uploading ${selectedFiles.length} file(s)...</span>
-                </div>
-            `;
-            document.body.appendChild(uploadProgress);
-            
-            // Simulate server processing delay
-            setTimeout(() => {
-                // Add files to secure storage
-                selectedFiles.forEach(file => {
+            // Process selected files
+            function handleFileSelection(files) {
+                noMedia.style.display = 'none';
+                
+                Array.from(files).forEach(file => {
                     const reader = new FileReader();
+                    const mediaItem = document.createElement('div');
+                    mediaItem.className = 'media-item';
+                    
                     reader.onload = function(e) {
-                        const fileData = {
-                            name: file.name,
-                            type: file.type,
-                            size: file.size,
-                             e.target.result,
-                            uploadTime: new Date().toISOString()
+                        if (file.type.startsWith('image/')) {
+                            const img = document.createElement('img');
+                            img.src = e.target.result;
+                            img.alt = file.name;
+                            mediaItem.appendChild(img);
+                        } else if (file.type.startsWith('video/')) {
+                            const video = document.createElement('video');
+                            video.src = e.target.result;
+                            video.controls = true;
+                            video.preload = 'metadata';
+                            mediaItem.appendChild(video);
+                        }
+                        
+                        // Add delete button
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'delete-btn';
+                        deleteBtn.innerHTML = '×';
+                        deleteBtn.onclick = () => {
+                            mediaItem.remove();
+                            if (mediaContainer.children.length === 1) {
+                                noMedia.style.display = 'block';
+                            }
                         };
+                        mediaItem.appendChild(deleteBtn);
                         
-                        // Store in secure location (simulated)
-                        const secureFile = secureStorage.addFile(fileData);
-                        
-                        // Update UI
-                        updateFileStructure();
-                        updateFolderCounts();
-                        updateMediaDisplay();
+                        mediaContainer.appendChild(mediaItem);
                     };
+                    
                     reader.readAsDataURL(file);
                 });
                 
-                // Clear selected files and update UI
-                selectedFiles = [];
-                updateFileList();
-                
-                // Remove upload progress
-                document.body.removeChild(uploadProgress);
-                
-                // Show success message
-                const successMsg = document.createElement('div');
-                successMsg.className = 'fixed top-4 right-4 bg-green-600 text-white rounded-lg shadow-lg p-4 z-50 animate-fade-in';
-                successMsg.textContent = `${secureStorage.files.length} file(s) uploaded to secure storage successfully!`;
-                document.body.appendChild(successMsg);
-                
-                // Auto-remove success message
-                setTimeout(() => {
-                    if (successMsg.parentNode) {
-                        document.body.removeChild(successMsg);
-                    }
-                }, 3000);
-                
-            }, 1500);
-        });
-        
-        // Update file structure visualization
-        function updateFileStructure() {
-            dataFolderContent.innerHTML = '';
-            
-            if (secureStorage.files.length === 0) {
-                dataFolderContent.innerHTML = '<p class="text-gray-500 text-sm">No files stored yet</p>';
-                return;
-            }
-            
-            secureStorage.files.forEach(file => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                
-                if (file.type.startsWith('image/')) {
-                    fileItem.innerHTML = `
-                        <i class="fas fa-image file-icon image-icon"></i>
-                        ${file.originalName}
-                    `;
-                } else if (file.type.startsWith('video/')) {
-                    fileItem.innerHTML = `
-                        <i class="fas fa-film file-icon video-icon"></i>
-                        ${file.originalName}
-                    `;
-                }
-                
-                dataFolderContent.appendChild(fileItem);
-            });
-        }
-        
-        // Update folder counters
-        function updateFolderCounts() {
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - now.getDay());
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            
-            const photos = secureStorage.getPhotos();
-            const videos = secureStorage.getVideos();
-            const allFiles = secureStorage.getAllFiles();
-            
-            photoCount.textContent = `${photos.length} files`;
-            videoCount.textContent = `${videos.length} files`;
-            totalCount.textContent = `${allFiles.length} files`;
-            
-            const todayFiles = allFiles.filter(file => {
-                const fileDate = new Date(file.uploadTime);
-                return fileDate >= today;
-            });
-            todayCount.textContent = `${todayFiles.length} files`;
-        }
-        
-        // Update media display based on current category and sort order
-        function updateMediaDisplay() {
-            mediaGrid.innerHTML = '';
-            
-            if (secureStorage.files.length === 0) {
-                mediaGrid.innerHTML = '<p class="text-gray-500 col-span-full text-center">No media in data folder yet</p>';
-                return;
-            }
-            
-            let filteredFiles = [];
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const startOfWeek = new Date(now);
-            startOfWeek.setDate(now.getDate() - now.getDay());
-            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-            
-            switch (currentCategory) {
-                case 'photos':
-                    filteredFiles = secureStorage.getPhotos();
-                    break;
-                case 'videos':
-                    filteredFiles = secureStorage.getVideos();
-                    break;
-                case 'today':
-                    filteredFiles = secureStorage.getAllFiles().filter(file => {
-                        const fileDate = new Date(file.uploadTime);
-                        return fileDate >= today;
-                    });
-                    break;
-                case 'week':
-                    filteredFiles = secureStorage.getAllFiles().filter(file => {
-                        const fileDate = new Date(file.uploadTime);
-                        return fileDate >= startOfWeek;
-                    });
-                    break;
-                case 'month':
-                    filteredFiles = secureStorage.getAllFiles().filter(file => {
-                        const fileDate = new Date(file.uploadTime);
-                        return fileDate >= startOfMonth;
-                    });
-                    break;
-                default:
-                    filteredFiles = secureStorage.getAllFiles();
-            }
-            
-            // Sort files
-            switch (currentSort) {
-                case 'newest':
-                    filteredFiles.sort((a, b) => new Date(b.uploadTime) - new Date(a.uploadTime));
-                    break;
-                case 'oldest':
-                    filteredFiles.sort((a, b) => new Date(a.uploadTime) - new Date(b.uploadTime));
-                    break;
-                case 'name':
-                    filteredFiles.sort((a, b) => a.originalName.localeCompare(b.originalName));
-                    break;
-                case 'size':
-                    filteredFiles.sort((a, b) => b.size - a.size);
-                    break;
-            }
-            
-            // Create media items
-            filteredFiles.forEach(item => {
-                const mediaItem = document.createElement('div');
-                mediaItem.className = 'media-item';
-                
-                if (item.type.startsWith('image/')) {
-                    const img = document.createElement('img');
-                    img.src = item.data;
-                    img.alt = item.originalName;
-                    img.className = 'w-full h-32 object-cover';
-                    mediaItem.appendChild(img);
-                } else if (item.type.startsWith('video/')) {
-                    const video = document.createElement('video');
-                    video.src = item.data;
-                    video.preload = 'metadata';
-                    video.className = 'w-full h-32 object-cover';
-                    video.innerHTML = '<source src="' + item.data + '" type="' + item.type + '">';
-                    mediaItem.appendChild(video);
-                }
-                
-                const playOverlay = document.createElement('div');
-                playOverlay.className = 'play-overlay';
-                playOverlay.innerHTML = '<i class="fas fa-play play-icon"></i>';
-                mediaItem.appendChild(playOverlay);
-                
-                const fileInfo = document.createElement('div');
-                fileInfo.className = 'file-info';
-                const fileSize = (item.size / (1024 * 1024)).toFixed(2);
-                fileInfo.innerHTML = `
-                    <div>${item.originalName}</div>
-                    <div>${fileSize} MB • ${new Date(item.uploadTime).toLocaleDateString()}</div>
-                `;
-                mediaItem.appendChild(fileInfo);
-                
-                // Click to view full size
-                mediaItem.addEventListener('click', () => openMediaModal(item));
-                
-                mediaGrid.appendChild(mediaItem);
-            });
-        }
-        
-        // Open media in modal
-        function openMediaModal(mediaItem) {
-            mediaModal.style.display = 'flex';
-            
-            if (mediaItem.type.startsWith('image/')) {
-                modalImage.src = mediaItem.data;
-                modalImage.style.display = 'block';
-                modalVideo.style.display = 'none';
-                videoControls.style.display = 'none';
-            } else if (mediaItem.type.startsWith('video/')) {
-                modalVideo.src = mediaItem.data;
-                modalVideo.style.display = 'block';
-                modalImage.style.display = 'none';
-                videoControls.style.display = 'flex';
-                
-                // Reset video controls
-                modalVideo.load();
-                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                currentPlayingVideo = modalVideo;
-            }
-        }
-        
-        // Close modal
-        modalClose.addEventListener('click', () => {
-            mediaModal.style.display = 'none';
-            if (modalVideo) modalVideo.pause();
-            currentPlayingVideo = null;
-        });
-        
-        // Close modal when clicking outside
-        mediaModal.addEventListener('click', (e) => {
-            if (e.target === mediaModal) {
-                mediaModal.style.display = 'none';
-                if (modalVideo) modalVideo.pause();
-                currentPlayingVideo = null;
+                // Clear file input
+                fileInput.value = '';
             }
         });
-        
-        // Video controls
-        if (playPauseBtn) {
-            playPauseBtn.addEventListener('click', () => {
-                if (modalVideo.paused) {
-                    modalVideo.play();
-                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                } else {
-                    modalVideo.pause();
-                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-                }
-            });
-        }
-        
-        if (volumeBtn) {
-            volumeBtn.addEventListener('click', () => {
-                if (modalVideo.muted) {
-                    modalVideo.muted = false;
-                    volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
-                } else {
-                    modalVideo.muted = true;
-                    volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-                }
-            });
-        }
-        
-        // Update progress bar
-        if (modalVideo) {
-            modalVideo.addEventListener('timeupdate', () => {
-                const progress = (modalVideo.currentTime / modalVideo.duration) * 100;
-                progressBar.style.width = `${progress}%`;
-            });
-            
-            // Reset progress bar when video ends
-            modalVideo.addEventListener('ended', () => {
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-                progressBar.style.width = '0%';
-            });
-        }
-        
-        // Category tab click handlers
-        function setActiveTab(tabId) {
-            // Remove active class from all tabs
-            [tabAll, tabPhotos, tabVideos, tabToday, tabWeek, tabMonth].forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Add active class to selected tab
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            currentCategory = tabId;
-            updateMediaDisplay();
-        }
-        
-        if (tabAll) tabAll.addEventListener('click', () => setActiveTab('all'));
-        if (tabPhotos) tabPhotos.addEventListener('click', () => setActiveTab('photos'));
-        if (tabVideos) tabVideos.addEventListener('click', () => setActiveTab('videos'));
-        if (tabToday) tabToday.addEventListener('click', () => setActiveTab('today'));
-        if (tabWeek) tabWeek.addEventListener('click', () => setActiveTab('week'));
-        if (tabMonth) tabMonth.addEventListener('click', () => setActiveTab('month'));
-        
-        // Sort order change handler
-        if (sortOrder) {
-            sortOrder.addEventListener('change', () => {
-                currentSort = sortOrder.value;
-                updateMediaDisplay();
-            });
-        }
-        
-        // Initialize with any existing data
-        updateFileStructure();
-        updateFolderCounts();
-        updateMediaDisplay();
     </script>
-    
-    <style>
-        @keyframes fade-in {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-            animation: fade-in 0.3s ease-out;
-        }
-    </style>
 </body>
 </html>
 ```
